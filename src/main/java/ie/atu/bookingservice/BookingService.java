@@ -28,7 +28,7 @@ public class BookingService {
         return bookingRepository.findByUserId(userId);
     }
 
-    public BookingDetails updateBooking(BookingDetails bookingDetails, BookingDetails updatedBooking) {
+    public BookingDetails updateBooking(String bookingDetails, BookingDetails updatedBooking) {
         if(bookingRepository.existsById(bookingDetails.getId())) {
             updatedBooking.setId(bookingDetails.getId());
             return bookingRepository.save(updatedBooking);
@@ -38,5 +38,9 @@ public class BookingService {
 
     public void deleteBooking(String id) {
         bookingRepository.deleteById(id);
+    }
+
+    public List<BookingDetails> getAllBookings() {
+        return bookingRepository.findAll();
     }
 }
