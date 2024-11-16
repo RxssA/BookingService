@@ -9,7 +9,7 @@ import java.util.Optional;
 @Service
 public class BookingService {
     private BookingRepository bookingRepository;
-    private BookingService bookingService;
+    private BookingDetails bookingDetails;
     @Autowired
     public BookingService(BookingRepository bookingRepository) {
         this.bookingRepository = bookingRepository;
@@ -28,7 +28,7 @@ public class BookingService {
         return bookingRepository.findByUserId(userId);
     }
 
-    public BookingDetails updateBooking(String bookingDetails, BookingDetails updatedBooking) {
+    public BookingDetails updateBooking(String id, BookingDetails updatedBooking) {
         if(bookingRepository.existsById(bookingDetails.getId())) {
             updatedBooking.setId(bookingDetails.getId());
             return bookingRepository.save(updatedBooking);
