@@ -8,15 +8,15 @@ import java.util.Optional;
 
 @Service
 public class BookingService {
-    private BookingRepository bookingRepository;
-    private BookingDetails bookingDetails;
+    private final BookingRepository bookingRepository;
+
     @Autowired
     public BookingService(BookingRepository bookingRepository) {
         this.bookingRepository = bookingRepository;
     }
 
     public BookingDetails createBooking(BookingDetails bookingDetails) {
-        bookingDetails.setStatus("Pending");
+        bookingDetails.setStatus("AVAILABLE");
         return bookingRepository.save(bookingDetails);
     }
 
@@ -29,8 +29,8 @@ public class BookingService {
     }
 
     public BookingDetails updateBooking(String id, BookingDetails updatedBooking) {
-        if(bookingRepository.existsById(bookingDetails.getId())) {
-            updatedBooking.setId(bookingDetails.getId());
+        if (updatedBooking != null && bookingRepository.existsById(id)) {
+            updatedBooking.setId(id);
             return bookingRepository.save(updatedBooking);
         }
         return null;
@@ -43,4 +43,9 @@ public class BookingService {
     public List<BookingDetails> getAllBookings() {
         return bookingRepository.findAll();
     }
+
+    public List<BookingDetails> getAvailableBookings() {
+        return bookingRepository.findByStatus("AVAILABLE");
+    }
+
 }
