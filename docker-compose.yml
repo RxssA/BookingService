@@ -8,22 +8,20 @@ services:
     ports:
       - "8081:8081"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/bookingdb
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/bookingdb
     depends_on:
-      - db
+      - mongodb
+    networks:
+      - backend
 
-  db:
-    image: mysql:8.0
-    container_name: booking-db
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: bookingdb
+  mongodb:
+    image: mongo:5.0
+    container_name: mongodb
     ports:
-      - "3307:3306"
-    volumes:
-      - db_data:/var/lib/mysql
+      - "27017:27017"
+    networks:
+      - backend
 
-volumes:
-  db_data:
+networks:
+  backend:
+    driver: bridge
