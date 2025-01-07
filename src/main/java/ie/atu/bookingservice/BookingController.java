@@ -1,5 +1,6 @@
 package ie.atu.bookingservice;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,31 +24,10 @@ public class BookingController {
         return ResponseEntity.ok(createdBooking);
     }
 
-    // Endpoint to get all available bookings (those that are not yet booked)
-    @GetMapping("/available")
-    public ResponseEntity<List<BookingDetails>> getAvailableBookings() {
-        List<BookingDetails> availableBookings = bookingService.getAvailableBookings();
-        return ResponseEntity.ok(availableBookings);
-    }
-
     // Endpoint to get all bookings
     @GetMapping
     public ResponseEntity<List<BookingDetails>> getAllBookings() {
         List<BookingDetails> bookings = bookingService.getAllBookings();
-        return ResponseEntity.ok(bookings);
-    }
-
-    // Endpoint to get a booking by its ID
-    @GetMapping("getbooking/{id}")
-    public ResponseEntity<BookingDetails> getBookingById(@PathVariable String id) {
-        Optional<BookingDetails> bookingDetails = bookingService.getBookingById(id);
-        return bookingDetails.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    // Endpoint to get bookings by user ID
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<BookingDetails>> getBookingByUserId(@PathVariable String userId) {
-        List<BookingDetails> bookings = bookingService.getByBookingUserId(userId);
         return ResponseEntity.ok(bookings);
     }
 
@@ -59,6 +39,23 @@ public class BookingController {
             return ResponseEntity.ok(updatedBooking);
         }
         return ResponseEntity.notFound().build();
+    }
+
+    @PostMapping("/confirmBooking")
+    public ResponseEntity<String> confirmBooking(@RequestBody BookingDetails bookingDetails) {
+        String authToken = bookingDetails.getToken();
+
+        if (authToken == null || authToken.isEmpty()) {
+            return ResponseEntity.badRequest().body("Auth token is required.");
+        }
+
+        boolean isConfirmed = bookingService.confirmBooking(bookingDetails.getId());
+
+        if (isConfirmed) {
+            return ResponseEntity.ok("Booking confirmed successfully.");
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Booking could not be confirmed.");
+        }
     }
 
     // Endpoint for deleting a booking

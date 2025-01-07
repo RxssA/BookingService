@@ -47,5 +47,19 @@ public class BookingService {
     public List<BookingDetails> getAvailableBookings() {
         return bookingRepository.findByStatus("AVAILABLE");
     }
+    public boolean confirmBooking(String id) {
+        Optional<BookingDetails> bookingOptional = bookingRepository.findById(id);
+        if (bookingOptional.isPresent()) {
+            BookingDetails booking = bookingOptional.get();
 
+            // Check if the status is "AVAILABLE"
+            if ("AVAILABLE".equals(booking.getStatus())) {
+                // If AVAILABLE, update status to "BOOKED"
+                booking.setStatus("BOOKED");
+                bookingRepository.save(booking);  // Save the updated booking
+                return true;
+            }
+        }
+        return false;  // Return false if the booking is not available or doesn't exist
+    }
 }
