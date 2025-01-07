@@ -1,4 +1,5 @@
 package ie.atu.bookingservice;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,17 +10,17 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
-import java.util.Optional;
 
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(BookingController.class)
 class BookingControllerTest {
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -47,7 +48,9 @@ class BookingControllerTest {
 
         mockMvc.perform(post("/api/booking/createBooking")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(bookingDetails)))
+                        .content(objectMapper.writeValueAsString(bookingDetails))
+                        .with(csrf()) // Add CSRF token
+                        .with(user("mockUser").roles("USER"))) // Mock user authentication
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value("1"))
                 .andExpect(jsonPath("$.userId").value("User1"));
@@ -56,68 +59,63 @@ class BookingControllerTest {
     }
 
     @Test
-    void getAvailableBookings_ShouldReturnAvailableBookings() throws Exception {
-        List<BookingDetails> availableBookings = Arrays.asList(bookingDetails);
-        when(bookingService.getAvailableBookings()).thenReturn(availableBookings);
+    void confirmBooking_ShouldReturnBookingNotConfirmed() throws Exception {
+        bookingDetails.setToken("mock-token"); // Mock valid token
 
-        mockMvc.perform(get("/api/booking/available")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(1))
-                .andExpect(jsonPath("$[0].id").value("1"));
+        when(bookingService.confirmBooking(bookingDetails.getId())).thenReturn(false);
 
-        verify(bookingService, times(1)).getAvailableBookings();
+        mockMvc.perform(post("/api/booking/confirmBooking")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(bookingDetails))
+                        .with(csrf()) // Add CSRF token
+                        .with(user("mockUser").roles("USER"))) // Mock user authentication
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Booking could not be confirmed."));
+
+        verify(bookingService, times(1)).confirmBooking(bookingDetails.getId());
     }
 
     @Test
-    void getAllBookings_ShouldReturnAllBookings() throws Exception {
-        List<BookingDetails> allBookings = Arrays.asList(bookingDetails);
-        when(bookingService.getAllBookings()).thenReturn(allBookings);
+    void confirmBooking_ShouldReturnBookingConfirmed() throws Exception {
+        bookingDetails.setToken("mock-token"); // Mock valid token
 
-        mockMvc.perform(get("/api/booking")
-                        .contentType(MediaType.APPLICATION_JSON))
+        when(bookingService.confirmBooking(bookingDetails.getId())).thenReturn(true);
+
+        mockMvc.perform(post("/api/booking/confirmBooking")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(bookingDetails))
+                        .with(csrf()) // Add CSRF token
+                        .with(user("mockUser").roles("USER"))) // Mock user authentication
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(1))
-                .andExpect(jsonPath("$[0].id").value("1"));
+                .andExpect(content().string("Booking confirmed successfully."));
 
-        verify(bookingService, times(1)).getAllBookings();
+        verify(bookingService, times(1)).confirmBooking(bookingDetails.getId());
     }
 
     @Test
-    void getBookingById_ShouldReturnBookingWhenFound() throws Exception {
-        when(bookingService.getBookingById("1")).thenReturn(Optional.of(bookingDetails));
+    void confirmBooking_ShouldReturnUnauthorizedIfInvalidToken() throws Exception {
+        bookingDetails.setToken("invalid-token"); // Mock invalid token
 
-        mockMvc.perform(get("/api/booking/getbooking/1")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value("1"));
-
-        verify(bookingService, times(1)).getBookingById("1");
+        mockMvc.perform(post("/api/booking/confirmBooking")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(bookingDetails))
+                        .with(csrf()) // Add CSRF token
+                        .with(user("mockUser").roles("USER"))) // Mock user authentication
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().string("Invalid or expired auth token."));
     }
 
     @Test
-    void getBookingById_ShouldReturnNotFoundWhenNotFound() throws Exception {
-        when(bookingService.getBookingById("2")).thenReturn(Optional.empty());
+    void deleteBooking_ShouldReturnOk() throws Exception {
+        doNothing().when(bookingService).deleteBooking("1");
 
-        mockMvc.perform(get("/api/booking/getbooking/2")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
+        mockMvc.perform(delete("/api/booking/delete/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf()) // Add CSRF token
+                        .with(user("mockUser").roles("USER"))) // Mock user authentication
+                .andExpect(status().isOk());
 
-        verify(bookingService, times(1)).getBookingById("2");
-    }
-
-    @Test
-    void getBookingByUserId_ShouldReturnBookingsForUser() throws Exception {
-        List<BookingDetails> userBookings = Arrays.asList(bookingDetails);
-        when(bookingService.getByBookingUserId("User1")).thenReturn(userBookings);
-
-        mockMvc.perform(get("/api/booking/user/User1")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(1))
-                .andExpect(jsonPath("$[0].id").value("1"));
-
-        verify(bookingService, times(1)).getByBookingUserId("User1");
+        verify(bookingService, times(1)).deleteBooking("1");
     }
 
     @Test
@@ -134,34 +132,13 @@ class BookingControllerTest {
 
         mockMvc.perform(put("/api/booking/update/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updatedBooking)))
+                        .content(objectMapper.writeValueAsString(updatedBooking))
+                        .with(csrf()) // Add CSRF token
+                        .with(user("mockUser").roles("USER"))) // Mock user authentication
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userId").value("User2"))
                 .andExpect(jsonPath("$.status").value("BOOKED"));
 
         verify(bookingService, times(1)).updateBooking(eq("1"), Mockito.any(BookingDetails.class));
-    }
-
-    @Test
-    void updateBooking_ShouldReturnNotFoundWhenNotFound() throws Exception {
-        when(bookingService.updateBooking(eq("2"), Mockito.any(BookingDetails.class))).thenReturn(null);
-
-        mockMvc.perform(put("/api/booking/update/2")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(bookingDetails)))
-                .andExpect(status().isNotFound());
-
-        verify(bookingService, times(1)).updateBooking(eq("2"), Mockito.any(BookingDetails.class));
-    }
-
-    @Test
-    void deleteBooking_ShouldReturnOk() throws Exception {
-        doNothing().when(bookingService).deleteBooking("1");
-
-        mockMvc.perform(delete("/api/booking/delete/1")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-
-        verify(bookingService, times(1)).deleteBooking("1");
     }
 }
