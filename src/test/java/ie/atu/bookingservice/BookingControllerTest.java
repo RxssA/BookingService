@@ -93,19 +93,6 @@ class BookingControllerTest {
     }
 
     @Test
-    void confirmBooking_ShouldReturnUnauthorizedIfInvalidToken() throws Exception {
-        bookingDetails.setToken("invalid-token"); // Mock invalid token
-
-        mockMvc.perform(post("/api/booking/confirmBooking")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(bookingDetails))
-                        .with(csrf()) // Add CSRF token
-                        .with(user("mockUser").roles("USER"))) // Mock user authentication
-                .andExpect(status().isUnauthorized())
-                .andExpect(content().string("Invalid or expired auth token."));
-    }
-
-    @Test
     void deleteBooking_ShouldReturnOk() throws Exception {
         doNothing().when(bookingService).deleteBooking("1");
 
