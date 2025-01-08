@@ -5,7 +5,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/booking")
@@ -17,21 +16,26 @@ public class BookingController {
         this.bookingService = bookingService;
     }
 
-    // Endpoint for creating a new booking
     @PostMapping("/createBooking")
     public ResponseEntity<BookingDetails> createBooking(@RequestBody BookingDetails bookingDetails) {
+        // Ensure required fields are populated
+        if (bookingDetails.getRoomType() == null || bookingDetails.getRoomType().isEmpty()) {
+            bookingDetails.setRoomType("Standard"); // Default room type
+        }
+        if (bookingDetails.getNumberOfGuests() == 0) {
+            bookingDetails.setNumberOfGuests(1); // Default to 1 guest
+        }
+
         BookingDetails createdBooking = bookingService.createBooking(bookingDetails);
         return ResponseEntity.ok(createdBooking);
     }
 
-    // Endpoint to get all bookings
     @GetMapping
     public ResponseEntity<List<BookingDetails>> getAllBookings() {
         List<BookingDetails> bookings = bookingService.getAllBookings();
         return ResponseEntity.ok(bookings);
     }
 
-    // Endpoint for updating a booking
     @PutMapping("update/{id}")
     public ResponseEntity<BookingDetails> updateBooking(@PathVariable String id, @RequestBody BookingDetails bookingDetails) {
         BookingDetails updatedBooking = bookingService.updateBooking(id, bookingDetails);
@@ -58,7 +62,6 @@ public class BookingController {
         }
     }
 
-    // Endpoint for deleting a booking
     @DeleteMapping("delete/{id}")
     public ResponseEntity<Void> deleteBooking(@PathVariable String id) {
         bookingService.deleteBooking(id);
