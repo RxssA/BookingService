@@ -10,15 +10,25 @@ import java.util.Optional;
 public class BookingService {
 
     private final BookingRepository bookingRepository;
+    private final BookingEventPublisher bookingEventPublisher;
 
     @Autowired
-    public BookingService(BookingRepository bookingRepository) {
+    public BookingService(BookingRepository bookingRepository, BookingEventPublisher bookingEventPublisher) {
         this.bookingRepository = bookingRepository;
+        this.bookingEventPublisher = bookingEventPublisher;
     }
 
     public BookingDetails createBooking(BookingDetails bookingDetails) {
         bookingDetails.setStatus("AVAILABLE"); // Default status
-        return bookingRepository.save(bookingDetails);
+        BookingDetails savedBooking = bookingRepository.save(bookingDetails);
+
+        // Publish event to RabbitMQ
+        BookingDetailsDTO dto = new BookingDetailsDTO();
+        dto.setId(savedBooking.getId());
+        dto.setAmount(savedBooking.getAmount());
+        bookingEventPublisher.publishBookingCreatedEvent(dto); // Pass the DTO
+
+        return savedBooking;
     }
 
     public List<BookingDetails> getAllBookings() {

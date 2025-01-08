@@ -2,9 +2,9 @@ package ie.atu.bookingservice;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-@Service
+@Component
 public class BookingEventPublisher {
 
     private final RabbitTemplate rabbitTemplate;
@@ -12,19 +12,14 @@ public class BookingEventPublisher {
     @Value("${rabbitmq.exchange}")
     private String exchange;
 
-    @Value("${rabbitmq.routingkey}")
+    @Value("${rabbitmq.routingKey}")
     private String routingKey;
 
     public BookingEventPublisher(RabbitTemplate rabbitTemplate) {
         this.rabbitTemplate = rabbitTemplate;
     }
 
-    public void publishBookingCreatedEvent(BookingDetails bookingDetails) {
-        BookingDetailsDTO dto = new BookingDetailsDTO();
-        dto.setId(bookingDetails.getId());
-        dto.setAmount(bookingDetails.getAmount()); // Include amount
-
-        rabbitTemplate.convertAndSend(exchange, routingKey, dto);
+    public void publishBookingCreatedEvent(BookingDetailsDTO bookingDetailsDTO) {
+        rabbitTemplate.convertAndSend(exchange, routingKey, bookingDetailsDTO);
     }
-
 }
