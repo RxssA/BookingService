@@ -15,7 +15,9 @@ public class BookingDetails {
     private String status;
     private Date bookingDate;
     private String token = null;
-    private double amount; // Add this field
+    private double amount;
+    private int numberOfGuests; // New field
+    private String roomType;    // New field
 
     // Getters and setters
     public String getId() {
@@ -74,11 +76,27 @@ public class BookingDetails {
         this.token = token;
     }
 
-    public double getAmount() { // Add getter
+    public double getAmount() {
         return amount;
     }
 
-    public void setAmount(double amount) { // Add setter
+    public void setAmount(double amount) {
         this.amount = amount;
+    }
+
+    public int getNumberOfGuests() {
+        return numberOfGuests;
+    }
+
+    public void setNumberOfGuests(int numberOfGuests) {
+        this.numberOfGuests = numberOfGuests;
+    }
+
+    public String getRoomType() {
+        return roomType;
+    }
+
+    public void setRoomType(String roomType) {
+        this.roomType = roomType;
     }
 }
