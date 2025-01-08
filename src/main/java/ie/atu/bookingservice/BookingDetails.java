@@ -15,7 +15,9 @@ public class BookingDetails {
     private String status;
     private Date bookingDate;
     private String token = null;
+    private double amount; // Add this field
 
+    // Getters and setters
     public String getId() {
         return id;
     }
@@ -64,21 +66,19 @@ public class BookingDetails {
         this.bookingDate = bookingDate;
     }
 
-    public void setBookedBy(String username) {
-    }
-
-    public void setBooked(boolean b) {
-    }
-
-    public boolean isBooked() {
-        return false;
-    }
-
     public String getToken() {
         return token;
     }
 
     public void setToken(String token) {
         this.token = token;
+    }
+
+    public double getAmount() { // Add getter
+        return amount;
+    }
+
+    public void setAmount(double amount) { // Add setter
+        this.amount = amount;
     }
 }
